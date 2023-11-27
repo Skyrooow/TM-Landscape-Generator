@@ -34,9 +34,4 @@ def register():
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-
-
-# run register() if file is executed
-if __name__ == "__main__":
-    register()
     
