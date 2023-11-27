@@ -1,1 +1,2 @@
-#Blender scripting repository
+# A repository to test and learn scripting in Blender
+
