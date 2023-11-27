@@ -14,29 +14,12 @@ bl_info = {
 
 
 # Import blender modules
-import bpy
+from bpy.utils import *
 
 
 # import classes
-class SK_OT_HelloWorld(bpy.types.Operator):
-    bl_idname = "view3d.hello_world"
-    bl_label = "Hello World"
-    
-    def execute(self, context):
-        print("hello world")
-        return {'FINISHED'}
-
-class SK_PT_HelloWorld(bpy.types.Panel):
-    bl_idname = "SK_PT_HelloWorld"
-    bl_label = "Hello World"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column(align=True)
-        col.operator("view3d.hello_world")
-
+from .operators.OT_HelloWorld     import *
+from .panels.PT_HelloWorld        import *
 
 # register classes
 classes = (
