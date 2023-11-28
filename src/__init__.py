@@ -18,8 +18,9 @@ from bpy.utils import *
 
 
 # import classes
-from .operators.OT_HelloWorld     import *
-from .panels.PT_HelloWorld        import *
+from .operators.OT_HelloWorld       import *
+from .panels.PT_HelloWorld          import *
+
 
 # register classes
 classes = (
@@ -31,7 +32,8 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+
+# unregister classes
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    
