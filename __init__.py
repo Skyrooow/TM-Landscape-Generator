@@ -7,7 +7,7 @@ ADDON_DIRNAME = os.path.dirname(__file__)
 
 # define blender addon info
 bl_info = {
-    "name": "Undefined",
+    "name": "TM Scenery Tools",
     "author": "Skyrow",
     "version": (0, 0, 0),
     "blender": (3, 6, 0),
@@ -19,10 +19,10 @@ bl_info = {
     "category": "3D View",
 }
 
-# import addon modules
+# import my modules
 from .utils.Path                    import *
 
-# import classes
+# import my classes
 from .operators.OT_HelloWorld       import *
 
 from .panels.PT_HelloWorld          import *
