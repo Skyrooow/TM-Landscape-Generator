@@ -1,12 +1,16 @@
 import bpy
 
+from ..utils.Constants import BasePanel
 
-class SK_PT_HelloWorld(bpy.types.Panel):
-    bl_idname = "SK_PT_HelloWorld"
-    bl_label = "PT_HelloWorld"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
 
+
+class C_PT_HelloWorld(BasePanel, bpy.types.Panel):
+    # idname = class name
+    bl_label = "Hello World"
+
+
+    def draw_header(self, context):
+        pass
 
     def draw(self, context):
         layout = self.layout
