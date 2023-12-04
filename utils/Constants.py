@@ -1,7 +1,5 @@
 """All constants accross the addon"""
 
-
-
 class BasePanel():
     """Data common to all panels"""
     bl_category ="TM Scenery Tools"

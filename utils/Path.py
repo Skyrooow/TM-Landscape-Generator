@@ -6,7 +6,6 @@ import os
 from .. import ADDON_DIRNAME
 
 
-
 def native_path(path: str) -> str:
     """Returns the path with system native separators."""
     return bpy.path.native_pathsep(path)

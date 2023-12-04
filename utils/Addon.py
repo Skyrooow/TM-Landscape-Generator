@@ -2,8 +2,8 @@
 
 import bpy
 
-import Path
-
+from . import Path
+from .. import bl_info
 
 
 def check_update() -> bool:

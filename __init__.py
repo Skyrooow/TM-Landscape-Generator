@@ -1,14 +1,3 @@
-# Import builtin modules
-import bpy
-import os
-
-
-# Addon directory name
-ADDON_DIRNAME = os.path.dirname(__file__)
-"""Main __init__.py directory"""
-
-
-
 # Blender addon info
 bl_info = {
     "name": "TM Scenery Tools",
@@ -22,6 +11,16 @@ bl_info = {
     "tracker_url": "",
     "category": "3D View",
 }
+
+# Import builtin modules
+import bpy
+import os
+
+
+# Addon directory name
+ADDON_DIRNAME = os.path.dirname(__file__)
+"""Main __init__.py directory"""
+
 
 # import my modules
 from .utils import Handlers
@@ -62,5 +61,3 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     Handlers.delete_handlers()
-
-

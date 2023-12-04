@@ -2,7 +2,7 @@
 
 import bpy
 
-import Path
+from . import Path
 
 
 

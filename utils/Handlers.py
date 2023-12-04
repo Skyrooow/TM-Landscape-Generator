@@ -1,16 +1,18 @@
+"""On_active_obj, on_startup & on_save routines"""
+
 import bpy
 from bpy.app.handlers import persistent
 
 from . import Path
 
+
 # Object that will store the handle to the msgbus subscription
 active_obj_handle_owner = object()
-
 
 # On active object change, run each time an object is selected in the outliner
 # or if active object change in viewport
 def on_active_obj(*args) -> None:
-    """Run when active object is updated"""
+    """Run when active object is changed"""
     print(f"Object: {bpy.context.object.name}, Location: {bpy.context.object.location}, Args: {args}")
 
 # Add subscriber to 'active object' msgbus 
