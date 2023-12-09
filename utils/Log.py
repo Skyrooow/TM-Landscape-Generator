@@ -1,54 +1,83 @@
 import logging
+import textwrap
 
 from . import Path
 
+from .. import LOG_DEBUG
 
-# Configure the main logger
-def get_master_logger(name: str | None = None, debug: bool = False) -> logging.Logger:
-    """Return the master logger, must be called only once in main __init__.py with name = __name__"""
-    logger = logging.getLogger(name)    
-    logger.setLevel(logging.DEBUG)
 
-    # formaters
-    full_formatter = logging.Formatter(
-    fmt='%(levelname)s: %(name)s\n\
-        file "%(pathname)s", Line %(lineno)s, in %(funcName)s\n\
-        "%(message)s"\n',
+# log level
+root_level: int
+if LOG_DEBUG:
+    root_level = logging.DEBUG
+else:
+    root_level = logging.WARNING
+
+
+# root logger
+root_logger = logging.getLogger()
+
+
+# handlers
+console_handler = logging.StreamHandler()
+file_handler = logging.FileHandler(filename=Path.get_logfile_path(), mode='w', encoding='utf-8')
+
+
+# formatters
+min_formatter = logging.Formatter(
+    fmt=textwrap.dedent('\
+                        %(levelname)s - %(name)s :\n\
+                        ... "%(message)s"'),
     datefmt='%Y-%m-%d %H:%M:%S',
     style='%')
 
-    min_formatter = logging.Formatter(
-    fmt='%(levelname)s: %(name)s\n\
-        "%(message)s"',
+full_formatter = logging.Formatter(
+    fmt=textwrap.dedent('\
+                        %(levelname)s - %(name)s :\n\
+                        ... file "%(pathname)s", Line %(lineno)s, in %(funcName)s\n\
+                        ... "%(message)s"'),
     datefmt='%Y-%m-%d %H:%M:%S',
     style='%')
-
-    # handlers
-    file_handler = logging.FileHandler(filename=Path.get_logfile_path(), mode='w', encoding='utf-8')
-    console_handler = logging.StreamHandler()
     
-    if debug:
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(full_formatter)
-        
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(min_formatter)
-    else:
-        file_handler.setLevel(logging.WARNING)
-        file_handler.setFormatter(full_formatter)
 
-        console_handler.setLevel(logging.WARNING)
-        console_handler.setFormatter(min_formatter)
-        
-    # add handlers to logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-
-    return logger
+# set log level
+root_logger.setLevel(root_level)
+console_handler.setLevel(root_level)
+file_handler.setLevel(root_level)
 
 
+# set formatter
+console_handler.setFormatter(min_formatter)
+file_handler.setFormatter(full_formatter)
+
+
+
+# get logger re-definition
 def get_logger(name: str | None = None) -> logging.Logger:
-    """Return a logger, name should be __name__ to follow module-level hierarchy"""
+    """Return a logger with the specified name, creating it if necessary.
+
+If no name is specified, return the root logger."""
     return logging.getLogger(name)
+
+
+# add handlers to root logger
+def start() -> None:
+    """Add console & file handlers to the root logger."""
+    if console_handler not in root_logger.handlers:   
+        root_logger.addHandler(console_handler)
+
+    if file_handler not in root_logger.handlers:
+        root_logger.addHandler(file_handler)
+
+
+# free handlers
+def stop() -> None:
+    """Remove console & file handlers from the root logger."""
+    if console_handler in root_logger.handlers:   
+        root_logger.removeHandler(console_handler)
+
+    if file_handler in root_logger.handlers:
+        root_logger.removeHandler(file_handler)
+
     
 

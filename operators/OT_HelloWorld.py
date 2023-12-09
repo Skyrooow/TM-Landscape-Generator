@@ -1,9 +1,9 @@
 import bpy
 
-from ..utils import Path
-
-# Logger declaration
 from ..utils import Log
+
+
+# Logging
 log = Log.get_logger(__name__)
 
 

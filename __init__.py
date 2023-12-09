@@ -1,16 +1,8 @@
-# Import builtin modules
-import bpy
-import os
+"""\
+Blender addon for Trackmania2020
+Author : Skyrow
+"""
 
-
-
-# Addon directory name
-ADDON_DIRNAME = os.path.dirname(__file__)
-"""Main __init__.py directory"""
-
-
-
-# Blender addon info
 bl_info = {
     "name": "TM Scenery Tools",
     "author": "Skyrow",
@@ -25,24 +17,32 @@ bl_info = {
 }
 
 
+# Import built-in modules
+import bpy
+import os
 
-# import my modules
-from .utils import Handlers
+
+LOG_DEBUG = True
+"""Toggle debug log level"""
+
+ADDON_DIRNAME = os.path.dirname(__file__)
+"""Main __init__.py directory"""
+
+
+# import third-party modules
+from .utils import Events
 from .utils import Log
 
-# Logger declaration
-log = Log.get_master_logger(__name__, debug=True)
 
-
-
-# import my classes
+# import bpy classes
 from .operators.OT_HelloWorld       import C_OT_HelloWorld
 from .operators.OT_Test             import C_OT_Test
 
 from .panels.PT_HelloWorld          import C_PT_HelloWorld
 from .panels.PT_Test                import C_PT_Test
 
-# classes register order
+
+# classes register list (order matters in panels)
 classes = (
     # Properties
 
@@ -57,22 +57,37 @@ classes = (
 
 
 
+
+# Logging
+log = Log.get_logger(__name__)
+
+
 # regiser addon
 def register():
+    Log.start()
+    log.info(f"{__name__} register start...")
+
+    # register bpy classes
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    Handlers.load_handlers()
+    # load event handlers
+    Events.load_handlers()
 
-    log.info(f"{__name__} registered")
-    
+    log.info(f"{__name__} registered !")
+
 
 
 # unregister addon
 def unregister():
+    log.info(f"{__name__} unregister start...")
+
+    # register bpy classes
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    Handlers.delete_handlers()
+    # remove event handlers
+    Events.delete_handlers()
 
-    log.info(f"{__name__} unregistered")    
+    log.info(f"{__name__} unregistered !")
+    Log.stop()
