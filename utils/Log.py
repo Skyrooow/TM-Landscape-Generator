@@ -6,16 +6,18 @@ from . import Path
 from .. import LOG_DEBUG
 
 
+
+
+# root logger
+root_logger = logging.getLogger()
+
+
 # log level
 root_level: int
 if LOG_DEBUG:
     root_level = logging.DEBUG
 else:
     root_level = logging.WARNING
-
-
-# root logger
-root_logger = logging.getLogger()
 
 
 # handlers
@@ -26,16 +28,16 @@ file_handler = logging.FileHandler(filename=Path.get_logfile_path(), mode='w', e
 # formatters
 min_formatter = logging.Formatter(
     fmt=textwrap.dedent('\
-                        %(levelname)s - %(name)s :\n\
-                        ... "%(message)s"'),
+                        %(levelname)s: %(name)s\n\
+                        .. "%(message)s"'),
     datefmt='%Y-%m-%d %H:%M:%S',
     style='%')
 
 full_formatter = logging.Formatter(
     fmt=textwrap.dedent('\
-                        %(levelname)s - %(name)s :\n\
-                        ... file "%(pathname)s", Line %(lineno)s, in %(funcName)s\n\
-                        ... "%(message)s"'),
+                        %(levelname)s: %(name)s\n\
+                        .. file "%(pathname)s", Line %(lineno)s, in %(funcName)s\n\
+                        .. "%(message)s"'),
     datefmt='%Y-%m-%d %H:%M:%S',
     style='%')
     
@@ -69,6 +71,9 @@ def start() -> None:
     if file_handler not in root_logger.handlers:
         root_logger.addHandler(file_handler)
 
+    if LOG_DEBUG:
+        root_logger.warning("DEBUG & INFO logging is enabled !")
+
 
 # free handlers
 def stop() -> None:
@@ -78,6 +83,3 @@ def stop() -> None:
 
     if file_handler in root_logger.handlers:
         root_logger.removeHandler(file_handler)
-
-    
-
