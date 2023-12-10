@@ -4,16 +4,25 @@ import bpy
 from bpy.app.handlers import persistent
 
 from . import Path
+from . import Log
+
+
+
+
+# logging
+log = Log.get_logger(__name__)
 
 
 # Object that will store the handle to the msgbus subscription
 active_obj_handle_owner = object()
 
+
 # On active object change, run each time an object is selected in the outliner
 # or if active object change in viewport
 def on_active_obj(*args) -> None:
     """Run when active object is changed"""
-    print(f"Object: {bpy.context.object.name}, Location: {bpy.context.object.location}, Args: {args}")
+    log.info(f"Active object is: {bpy.context.object.name}, type: {bpy.context.object.type}")
+
 
 # Add subscriber to 'active object' msgbus 
 @persistent
@@ -28,11 +37,11 @@ def subscribe_active_obj(dummy) -> None:
             options={"PERSISTENT"}
         )
 
+
 # Remove any subscriber from msgbus
 @persistent
 def unsubscribe_active_obj(dummy) -> None:
     bpy.msgbus.clear_by_owner(active_obj_handle_owner)
-
 
 
 # Do stuff after blender startup
@@ -42,18 +51,18 @@ def on_load_post(filepath) -> None:
     filepath = Path.native_path(filepath)
     if filepath == "":
         # Run post startup
-        pass
+        log.info("EVENT: post startup")
     else:
         # Run post file load
-        pass
-        
+        log.info("EVENT: post file load")
+
+
 # Do stuff after blender file save
 @persistent
 def on_save_post(filepath)-> None:
     """Run post blender file save"""
-    pass
+    log.info("EVENT: post save")
     
-
 
 # Load event handlers
 def load_handlers() -> None:
@@ -68,6 +77,7 @@ def load_handlers() -> None:
 
     if on_save_post not in bpy.app.handlers.save_post:
         bpy.app.handlers.save_post.append(on_save_post)
+
 
 # Delete event handlers
 def delete_handlers() -> None:
