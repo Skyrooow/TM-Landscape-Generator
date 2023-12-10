@@ -1,7 +1,8 @@
-"""\
+"""
 Blender addon for Trackmania2020
 Author : Skyrow
 """
+
 
 bl_info = {
     "name": "TM Scenery Tools",
@@ -17,19 +18,12 @@ bl_info = {
 }
 
 
-# Import built-in modules
-import bpy
 import os
-
-
-LOG_DEBUG = False
-"""Toggle debug log level"""
+import bpy
 
 ADDON_DIRNAME = os.path.dirname(__file__)
 """Main __init__.py directory"""
 
-
-# import third-party modules
 from .utils import Events
 from .utils import Log
 
@@ -42,7 +36,7 @@ from .panels.PT_HelloWorld          import C_PT_HelloWorld
 from .panels.PT_Test                import C_PT_Test
 
 
-# classes register list (order matters in panels)
+# classes register list (order matters for panels)
 classes = (
     # Properties
 
@@ -58,30 +52,25 @@ classes = (
 
 
 
-# Logging
-log = Log.get_logger(__name__)
+# Logger
+log = Log.getLogger(__name__)
 
 
-# regiser addon
+# register addon
 def register():
     Log.start()
 
-    # register bpy classes
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    # load event handlers
-    Events.load_handlers()
-
+    Events.start_listening()
 
 
 # unregister addon
 def unregister():
-    # register bpy classes
+    Events.stop_listening()
+
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-
-    # remove event handlers
-    Events.delete_handlers()
 
     Log.stop()

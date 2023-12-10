@@ -4,7 +4,7 @@ from ..utils import Log
 
 
 # Logging
-log = Log.get_logger(__name__)
+log = Log.getLogger(__name__)
 
 
 class C_OT_HelloWorld(bpy.types.Operator):
