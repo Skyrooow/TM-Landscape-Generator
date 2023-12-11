@@ -1,10 +1,9 @@
 import bpy
 
-from ..utils.Constants import BasePanel
+from . import Panels
 
 
-
-class C_PT_Test(BasePanel, bpy.types.Panel):
+class C_PT_Test(Panels, bpy.types.Panel):
     # idname = class name
     bl_label = "Test"
 
