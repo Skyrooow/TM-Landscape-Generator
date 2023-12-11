@@ -37,7 +37,7 @@ def get_assets_dirname() -> str:
 
 def get_logfile_path() -> str:
     """Return the log file path"""
-    return join(get_addon_dirname(), 'log.txt')
+    return join(get_addon_dirname(), 'log.html')
 
 
 def get_blenderfile_path() -> str:
