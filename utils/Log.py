@@ -20,15 +20,26 @@ ERROR     | log.error("Error msg", stack_info=True)
 CRITICAL  | log.critical("Critical msg", stack_info=True)
 """
 
-import logging, copy, textwrap, html
+import logging, copy, textwrap, html, bpy, os, platform
 
 from . import Path
 
-
+from .. import bl_info
 
 
 LOG_DEBUG = True
 
+debug_info={
+    'bl_version'    : bpy.app.version_string,
+    'addon_version' : '.'.join(str(i) for i in bl_info["version"]),
+    'blender_bin'   : bpy.app.binary_path,
+    'addon_dir'     : Path.get_addon_dirname(),
+    'w_perm'        : os.access(Path.get_addon_dirname(),os.W_OK),
+    'platform'      : platform.platform(),
+    'architecture'  : ' - '.join(str(i) for i in platform.architecture()),
+    'processor'     : platform.processor(),
+    'pyversion'     : platform.python_version(),
+}
 
 #---------------------------------------------------------------------------
 #   Console Formatter classe
@@ -55,7 +66,7 @@ class ConsoleStyleFormatter(logging.Formatter):
         cpyRecord = copy.copy(record) 
 
         levelcolor = self.level_to_color[cpyRecord.levelno]
-
+        
         cpyRecord.levelname     = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
         cpyRecord.name          = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.name)
         cpyRecord.threadName    = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.threadName)
@@ -116,23 +127,44 @@ class HtmlStyleFormatter(logging.Formatter):
 
 # Initialize html file
 htmlfile = Path.get_logfile_path()
-htmlHeader = textwrap.dedent('\
-                                <!DOCTYPE html>\n\
-                                <style>\n\
-                                body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large;}\n\
-                                .l1    {color: dodgerblue}\n\
-                                .l2    {color: lawngreen}\n\
-                                .l3    {color: yellow}\n\
-                                .l4    {color: crimson}\n\
-                                .l5    {color: magenta}\n\
-                                .msg   {color: grey}\n\
-                                .ei    {color: steelblue;}\n\
-                                .si    {color: steelblue;}\n\
-                                .t     {color: grey;}\n\
-                                </style>\n\n\
-                                ')
+
+htmlMetadata = textwrap.dedent('\
+    <!DOCTYPE html>\n\
+    <head>\n\
+      <title>%(name)s logs</title>\n\
+      <style>\n\
+      body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large;}\n\
+      .l1    {color: dodgerblue}\n\
+      .l2    {color: lawngreen}\n\
+      .l3    {color: yellow}\n\
+      .l4    {color: crimson}\n\
+      .l5    {color: magenta}\n\
+      .msg   {color: grey}\n\
+      .ei    {color: steelblue;}\n\
+      .si    {color: steelblue;}\n\
+      .t     {color: grey;}\n\
+      </style>\n\
+    </head>\n\n\
+    ') % bl_info
+
+htmlDebugHeader = textwrap.dedent('\
+    <header>\n\
+      Blender version: %(bl_version)s\n\
+      Addon version: %(addon_version)s\n\n\
+      Blender executable: "%(blender_bin)s"\n\
+      Addon directory: "%(addon_dir)s"\n\
+        Write permission: %(w_perm)s\n\n\
+      Platform informations:\n\
+        %(platform)s\n\
+        %(architecture)s\n\
+        %(processor)s\n\
+        Python: %(pyversion)s\n\
+    </header>\n\n\
+    ') % debug_info
+
 with open(file=htmlfile, mode='w', encoding='utf-8') as f:
-    f.write(htmlHeader)
+    f.write(htmlMetadata)
+    f.write(htmlDebugHeader)
 
 # Format strings
 min_fmt     = '%(levelname)s %(name)s: %(message)s'
