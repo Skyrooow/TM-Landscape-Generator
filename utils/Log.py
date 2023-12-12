@@ -84,7 +84,7 @@ class ConsoleStyleFormatter(logging.Formatter):
         cpyRecord.levelname     = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
         cpyRecord.name          = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.name)
         cpyRecord.threadName    = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.threadName)
-        cpyRecord.msg           = '\x1b[2m%s\x1b[0m'        % (cpyRecord.getMessage())
+        cpyRecord.msg           = '\x1b[2m%s\x1b[0m'        % (cpyRecord.msg)
         return super().format(cpyRecord)
 
     def formatTime(self, record, datefmt=None) -> str:
@@ -122,7 +122,7 @@ class HtmlStyleFormatter(logging.Formatter):
         cpyRecord.levelname     = '<span class="%s">%s</span>'  % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
         cpyRecord.name          = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.name)
         cpyRecord.threadName    = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.threadName)
-        cpyRecord.msg           = '<span class="msg">%s</span>' % html.escape(cpyRecord.getMessage())
+        cpyRecord.msg           = '<span class="msg">%s</span>' % html.escape(cpyRecord.msg)
         return super().format(cpyRecord)
 
     def formatTime(self, record, datefmt=None) -> str:
