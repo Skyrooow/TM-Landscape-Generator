@@ -20,7 +20,7 @@ ERROR     | log.error("Error msg", stack_info=True)
 CRITICAL  | log.critical("Critical msg", stack_info=True)
 """
 
-import logging, copy, textwrap
+import logging, copy, textwrap, html
 
 from . import Path
 
@@ -34,7 +34,7 @@ LOG_DEBUG = True
 #   Initialise html log file
 #---------------------------------------------------------------------------
 
-logfile = Path.get_logfile_path()
+htmlfile = Path.get_logfile_path()
 
 htmlHeader = textwrap.dedent('\
                              <!DOCTYPE html>\n\
@@ -52,7 +52,7 @@ htmlHeader = textwrap.dedent('\
                              </style>\n\n\
                             ')
 
-with open(file=logfile, mode='w', encoding='utf-8') as f:
+with open(file=htmlfile, mode='w', encoding='utf-8') as f:
     f.write(htmlHeader)
 
 #---------------------------------------------------------------------------
@@ -65,7 +65,6 @@ class ConsoleStyleFormatter(logging.Formatter):
     
     https://gist.github.com/abritinthebay/d80eb99b2726c83feb0d97eab95206c4
     """
-
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
     level_to_color = {
@@ -76,40 +75,26 @@ class ConsoleStyleFormatter(logging.Formatter):
         logging.CRITICAL    :   MAGENTA   
     }
 
-  
     def format(self, record) -> str:
-        # Do not edit the original record, this let multiple formatter handling the same record 
+        # Do not edit the original record, this let multiple formatters handling the same record 
         cpyRecord = copy.copy(record) 
 
         levelcolor = self.level_to_color[cpyRecord.levelno]
 
-        cpyRecord.levelname    = '\x1b[1;3%sm%s\x1b[0m'     % (levelcolor, '{:^8s}'.format(cpyRecord.levelname))
-        cpyRecord.name         = '\x1b[1;3%sm%s\x1b[0m'     % (levelcolor, cpyRecord.name)
-        cpyRecord.threadName   = '\x1b[1;3%sm%s\x1b[0m'     % (levelcolor, cpyRecord.threadName)
-        cpyRecord.message      = '\x1b[2m%s\x1b[0m'         % (cpyRecord.getMessage())
-        if self.usesTime():
-            cpyRecord.asctime  = '\x1b[2m%s\x1b[0m'         % (self.formatTime(cpyRecord, self.datefmt))
-        s = self.formatMessage(cpyRecord)
-        if cpyRecord.exc_info:
-            if not cpyRecord.exc_text:
-                cpyRecord.exc_text = self.formatException(cpyRecord.exc_info)
-        if cpyRecord.exc_text:
-            if s[-1:] != "\n":
-                s = s + "\n"
-            s = s + cpyRecord.exc_text
-        if cpyRecord.stack_info:
-            if s[-1:] != "\n":
-                s = s + "\n"
-            s = s + self.formatStack(cpyRecord.stack_info)
-        return s
+        cpyRecord.levelname     = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
+        cpyRecord.name          = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.name)
+        cpyRecord.threadName    = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.threadName)
+        cpyRecord.msg           = '\x1b[2m%s\x1b[0m'        % (cpyRecord.getMessage())
+        return super().format(cpyRecord)
 
-
-    def formatException(self, ei) -> str:
-        return '\x1b[36m%s\x1b[0m' % (super().formatException(ei))
+    def formatTime(self, record, datefmt=None) -> str:
+        return '\x1b[2m%s\x1b[0m' % super().formatTime(record, datefmt)
     
+    def formatException(self, ei) -> str:
+        return '\x1b[36m%s\x1b[0m' % super().formatException(ei)
     
     def formatStack(self, stack_info) -> str:
-        return '\x1b[36m%s\x1b[0m' % (super().formatStack(stack_info))
+        return '\x1b[36m%s\x1b[0m' % super().formatStack(stack_info)
 
 
 #---------------------------------------------------------------------------
@@ -120,7 +105,6 @@ class HtmlStyleFormatter(logging.Formatter):
     """
     This is a formatter which add html balises to the record.  
     """
-
     level_to_color = {
         logging.DEBUG       :   'l1',
         logging.INFO        :   'l2',
@@ -128,39 +112,27 @@ class HtmlStyleFormatter(logging.Formatter):
         logging.ERROR       :   'l4',
         logging.CRITICAL    :   'l5'    
     }
-
-  
+ 
     def format(self, record) -> str:
-        # Do not edit the original record, this let multiple formatter handling the same record
+        # Do not edit the original record, this let multiple formatters handling the same record
         cpyRecord = copy.copy(record)
 
         levelcolor = self.level_to_color[cpyRecord.levelno]
+        
+        cpyRecord.levelname     = '<span class="%s">%s</span>'  % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
+        cpyRecord.name          = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.name)
+        cpyRecord.threadName    = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.threadName)
+        cpyRecord.msg           = '<span class="msg">%s</span>' % html.escape(cpyRecord.getMessage())
+        return super().format(cpyRecord)
 
-        cpyRecord.levelname    = '<span class="%s">%s</span>'     % (levelcolor, '{:^8s}'.format(cpyRecord.levelname))
-        cpyRecord.name         = '<span class="%s">%s</span>'     % (levelcolor, cpyRecord.name)
-        cpyRecord.threadName   = '<span class="%s">%s</span>'     % (levelcolor, cpyRecord.threadName)
-        cpyRecord.message      = '<span class="msg">%s</span>'  % (cpyRecord.getMessage()).replace('&', '&#38').replace('<','&#60')
-        if self.usesTime():
-            cpyRecord.asctime  = '<span class="t">%s</span>'   % (self.formatTime(cpyRecord, self.datefmt))
-        s = self.formatMessage(cpyRecord)
-        if cpyRecord.exc_info:
-            if not cpyRecord.exc_text:
-                cpyRecord.exc_text = self.formatException(cpyRecord.exc_info)
-        if cpyRecord.exc_text:
-            if s[-1:] != "\n":
-                s = s + "\n"
-            s = s + cpyRecord.exc_text
-        if cpyRecord.stack_info:
-            if s[-1:] != "\n":
-                s = s + "\n"
-            s = s + self.formatStack(cpyRecord.stack_info)
-        return s
-
+    def formatTime(self, record, datefmt=None) -> str:
+        return '<span class="t">%s</span>' % super().formatTime(record, datefmt)
+    
     def formatException(self, exc_info) -> str:
-        return '<span class="ei">%s</span>' % super().formatException(exc_info).replace('&', '&#38').replace('<','&#60')
+        return '<span class="ei">%s</span>' % html.escape(super().formatException(exc_info))
     
     def formatStack(self, stack_info) -> str:
-        return '<span class="si">%s</span>' % super().formatStack(stack_info).replace('&', '&#38').replace('<','&#60')
+        return '<span class="si">%s</span>' % html.escape(super().formatStack(stack_info))
     
 
 #---------------------------------------------------------------------------
@@ -173,65 +145,29 @@ root_logger = logging.getLogger()
 min_fmt     = '%(levelname)s %(name)s: %(message)s'
 debug_fmt   = '%(asctime)s %(levelname)s %(name)s from %(threadName)s: %(message)s'
 
-# Console formatters
-console_formatter = ConsoleStyleFormatter(fmt=min_fmt)
-debug_console_formatter = ConsoleStyleFormatter(fmt=debug_fmt)
-
-# Html formatters
-html_formatter = HtmlStyleFormatter(fmt=min_fmt)
-debug_html_formatter = HtmlStyleFormatter(fmt=debug_fmt)
-
 #Handlers
 console_handler = logging.StreamHandler()
-file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
+html_handler = logging.FileHandler(filename=htmlfile, mode='a', encoding='utf-8')
 
 # Set level and formatters
+level = logging.WARNING
+fmt = min_fmt
+
 if LOG_DEBUG:
-    root_logger.setLevel(logging.DEBUG)
+    level = logging.DEBUG
+    fmt = debug_fmt
 
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(debug_console_formatter)
+root_logger.setLevel(level)
+console_handler.setLevel(level)
+html_handler.setLevel(level)
 
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(debug_html_formatter)
-else:
-    root_logger.setLevel(logging.WARNING)
-
-    console_handler.setLevel(logging.WARNING)
-    console_handler.setFormatter(console_formatter)
-
-    file_handler.setLevel(logging.WARNING)
-    file_handler.setFormatter(html_formatter)
+console_handler.setFormatter(ConsoleStyleFormatter(fmt=fmt))
+html_handler.setFormatter(HtmlStyleFormatter(fmt=fmt))
 
 
 #---------------------------------------------------------------------------
 #   Log functions
 #---------------------------------------------------------------------------
-
-# Add handlers to root logger
-def start() -> None:
-    """Add console & file handlers to the root logger."""
-    if console_handler not in root_logger.handlers:   
-        root_logger.addHandler(console_handler)
-
-    if file_handler not in root_logger.handlers:
-        root_logger.addHandler(file_handler)
-    
-    if LOG_DEBUG:
-        root_logger.warning("DEBUG & INFO logging is enabled !")
-   
-
-# Remove handlers from root logger
-def stop() -> None:
-    """Remove console & file handlers from the root logger."""
-    if console_handler in root_logger.handlers:   
-        root_logger.removeHandler(console_handler)
-        #console_handler.close()
-
-    if file_handler in root_logger.handlers:
-        root_logger.removeHandler(file_handler)
-        #file_handler.close()
-
 
 # getLogger re-definition
 def getLogger(name: str | None = None) -> logging.Logger:
@@ -239,3 +175,26 @@ def getLogger(name: str | None = None) -> logging.Logger:
 
 If no name is specified, return the root logger."""
     return logging.getLogger(name)
+
+
+# Add handlers to root logger
+def start() -> None:
+    """Add console & file handlers to the root logger."""
+    if console_handler not in root_logger.handlers:   
+        root_logger.addHandler(console_handler)
+
+    if html_handler not in root_logger.handlers:
+        root_logger.addHandler(html_handler)
+    
+    if LOG_DEBUG:
+        getLogger(__name__).warning("DEBUG & INFO logging is enabled !")
+
+   
+# Remove handlers from root logger
+def stop() -> None:
+    """Remove console & file handlers from the root logger."""
+    if console_handler in root_logger.handlers:   
+        root_logger.removeHandler(console_handler)
+        
+    if html_handler in root_logger.handlers:
+        root_logger.removeHandler(html_handler)
