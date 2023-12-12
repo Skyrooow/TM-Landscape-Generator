@@ -7,7 +7,7 @@ Formatted logging with colors in console & in html file
 - getLogger(name)  ->  Return a logger with the specified name
 
 ### Examples
-For each file, declare a logger object:
+For each file, create a logger object:
 - log = Log.getLogger(__name__)
 
 Logging level | Example | Note
@@ -29,31 +29,6 @@ from . import Path
 
 LOG_DEBUG = True
 
-
-#---------------------------------------------------------------------------
-#   Initialise html log file
-#---------------------------------------------------------------------------
-
-htmlfile = Path.get_logfile_path()
-
-htmlHeader = textwrap.dedent('\
-                             <!DOCTYPE html>\n\
-                             <style>\n\
-                             body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large;}\n\
-                             .l1    {color: dodgerblue}\n\
-                             .l2    {color: lawngreen}\n\
-                             .l3    {color: yellow}\n\
-                             .l4    {color: crimson}\n\
-                             .l5    {color: magenta}\n\
-                             .msg   {color: grey}\n\
-                             .ei    {color: steelblue;}\n\
-                             .si    {color: steelblue;}\n\
-                             .t     {color: grey;}\n\
-                             </style>\n\n\
-                            ')
-
-with open(file=htmlfile, mode='w', encoding='utf-8') as f:
-    f.write(htmlHeader)
 
 #---------------------------------------------------------------------------
 #   Console Formatter classe
@@ -136,20 +111,34 @@ class HtmlStyleFormatter(logging.Formatter):
     
 
 #---------------------------------------------------------------------------
-#   Log configuration
+#   Logging initialization
 #---------------------------------------------------------------------------
 
-root_logger = logging.getLogger()
+# Initialize html file
+htmlfile = Path.get_logfile_path()
+htmlHeader = textwrap.dedent('\
+                                <!DOCTYPE html>\n\
+                                <style>\n\
+                                body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large;}\n\
+                                .l1    {color: dodgerblue}\n\
+                                .l2    {color: lawngreen}\n\
+                                .l3    {color: yellow}\n\
+                                .l4    {color: crimson}\n\
+                                .l5    {color: magenta}\n\
+                                .msg   {color: grey}\n\
+                                .ei    {color: steelblue;}\n\
+                                .si    {color: steelblue;}\n\
+                                .t     {color: grey;}\n\
+                                </style>\n\n\
+                                ')
+with open(file=htmlfile, mode='w', encoding='utf-8') as f:
+    f.write(htmlHeader)
 
 # Format strings
 min_fmt     = '%(levelname)s %(name)s: %(message)s'
 debug_fmt   = '%(asctime)s %(levelname)s %(name)s from %(threadName)s: %(message)s'
 
-#Handlers
-console_handler = logging.StreamHandler()
-html_handler = logging.FileHandler(filename=htmlfile, mode='a', encoding='utf-8')
-
-# Set level and formatters
+# Define level and format string
 level = logging.WARNING
 fmt = min_fmt
 
@@ -157,12 +146,18 @@ if LOG_DEBUG:
     level = logging.DEBUG
     fmt = debug_fmt
 
-root_logger.setLevel(level)
+# Configure Handlers
+console_handler = logging.StreamHandler()
 console_handler.setLevel(level)
-html_handler.setLevel(level)
+console_handler.setFormatter(ConsoleStyleFormatter(fmt))
 
-console_handler.setFormatter(ConsoleStyleFormatter(fmt=fmt))
+html_handler = logging.FileHandler(filename=htmlfile, mode='a', encoding='utf-8')
+html_handler.setLevel(level)
 html_handler.setFormatter(HtmlStyleFormatter(fmt=fmt))
+
+# Set root logger level
+root_logger = logging.getLogger()
+root_logger.setLevel(level)
 
 
 #---------------------------------------------------------------------------
