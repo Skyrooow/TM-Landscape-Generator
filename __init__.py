@@ -1,6 +1,7 @@
 """
 Blender addon for Trackmania2020
-Author : Skyrow
+
+
 """
 
 
