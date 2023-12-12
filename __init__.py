@@ -6,7 +6,7 @@ Blender addon for Trackmania2020
 
 
 bl_info = {
-    "name": "TM Scenery Tools",
+    "name": "TM Scenery Addon",
     "author": "Skyrow",
     "version": (0, 0, 0),
     "blender": (3, 6, 0),
