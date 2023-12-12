@@ -76,7 +76,7 @@ class ConsoleStyleFormatter(logging.Formatter):
         logging.CRITICAL    :   MAGENTA   
     }
 
-
+  
     def format(self, record) -> str:
         # Do not edit the original record, this let multiple formatter handling the same record 
         cpyRecord = copy.copy(record) 
@@ -129,7 +129,7 @@ class HtmlStyleFormatter(logging.Formatter):
         logging.CRITICAL    :   'l5'    
     }
 
-
+  
     def format(self, record) -> str:
         # Do not edit the original record, this let multiple formatter handling the same record
         cpyRecord = copy.copy(record)
@@ -154,7 +154,7 @@ class HtmlStyleFormatter(logging.Formatter):
             if s[-1:] != "\n":
                 s = s + "\n"
             s = s + self.formatStack(cpyRecord.stack_info)
-        return '%s' % (s)
+        return s
 
     def formatException(self, exc_info) -> str:
         return '<span class="ei">%s</span>' % super().formatException(exc_info).replace('&', '&#38').replace('<','&#60')
