@@ -23,6 +23,7 @@ log = Log.getLogger(__name__)
 def on_active_obj(*args) -> None:
     """Run when active object changes"""
     log.info(f"Active object is: {bpy.context.object.name}, type: {bpy.context.object.type}")
+    log.debug(f"Active object data: {bpy.context.object.data} {bpy.context.object.location}")
 
 
 # Do stuff after blender startup
