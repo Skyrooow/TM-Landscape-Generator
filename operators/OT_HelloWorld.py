@@ -1,10 +1,10 @@
 import bpy
 
-from ..utils import Log
+from ..utils import logs
 
 
 # Logging
-log = Log.getLogger(__name__)
+log = logs.get_logger(__name__)
 
 
 class C_OT_HelloWorld(bpy.types.Operator):

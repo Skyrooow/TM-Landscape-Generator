@@ -1,9 +1,4 @@
-"""
-Blender addon for Trackmania2020
-
-
-"""
-
+"""Blender addon for Trackmania2020"""
 
 bl_info = {
     "name": "TM Scenery Addon",
@@ -25,14 +20,13 @@ import bpy
 ADDON_DIRNAME = os.path.dirname(__file__)
 """Main __init__.py directory"""
 
-from .utils import Events
-from .utils import Log
+from .utils import events
+from .utils import logs
 
-
-# import bpy classes
+# operators
 from .operators.OT_HelloWorld       import C_OT_HelloWorld
 from .operators.OT_Test             import C_OT_Test
-
+# panels
 from .panels.PT_HelloWorld          import C_PT_HelloWorld
 from .panels.PT_Test                import C_PT_Test
 
@@ -54,24 +48,24 @@ classes = (
 
 
 # Logger
-log = Log.getLogger(__name__)
+log = logs.get_logger(__name__)
 
 
 # register addon
 def register():
-    Log.start()
+    logs.start_logging()
 
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    Events.start_listening()
+    events.start_listening()
 
 
 # unregister addon
 def unregister():
-    Events.stop_listening()
+    events.stop_listening()
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    Log.stop()
+    logs.stop_logging()

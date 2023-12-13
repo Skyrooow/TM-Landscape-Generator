@@ -17,6 +17,7 @@ def is_path_existing(pathname: str) -> bool:
 
 
 def join(path:str, *paths:str) -> str:
+    """Join one or more path segments intelligently."""
     return os.path.join(path, *paths)
 
 
@@ -33,11 +34,6 @@ def get_addon_dirname() -> str:
 def get_assets_dirname() -> str:
     """Returns the addon assets directory."""
     return join(get_addon_dirname(), 'assets')
-
-
-def get_logfile_path() -> str:
-    """Return the log file path"""
-    return join(get_addon_dirname(), 'log.html')
 
 
 def get_blenderfile_path() -> str:

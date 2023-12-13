@@ -1,1 +1,0 @@
-"""All constants accross the addon"""

@@ -1,51 +1,56 @@
-"""
-Formatted logging with colors in console & in html file
+"""Formatted logging with colors in console & in html file
 
-### Functions:
-- Log.Start()       ->  Start handling log messages
-- Log.Stop()        ->  Stop handling log messages
-- getLogger(name)  ->  Return a logger with the specified name
+Function | Use
+:---|:---
+start_logging() | Start handling log messages
+stop_logging()  | Stop handling log messages
+get_logger(name)| Return a logger with the specified name
 
-### Examples
-For each file, create a logger object:
-- log = Log.getLogger(__name__)
+For each file, create a logger object: `log = logs.get_logger(__name__)`
 
 Logging level | Example | Note
 :---|:---|:---
-DEBUG     | log.debug("Debug msg", stack_info=True)
-INFO      | log.info("Info msg")
-WARNING   | log.warning("Warning msg")
-EXCEPTION | log.exception("Exception msg") | Inside of Except block only              
-ERROR     | log.error("Error msg", stack_info=True)
-CRITICAL  | log.critical("Critical msg", stack_info=True)
+DEBUG     | `log.debug("Debug msg", stack_info=True)`
+INFO      | `log.info("Info msg")`
+WARNING   | `log.warning("Warning msg")`
+EXCEPTION | `log.exception("Exception msg")` | Inside of Except block only              
+ERROR     | `log.error("Error msg", stack_info=True)`
+CRITICAL  | `log.critical("Critical msg", stack_info=True)`
 """
 
-import logging, copy, textwrap, html, bpy, os, platform
+import logging
+import copy
+import textwrap
+import html
+import os
+import platform
+import bpy
 
-from . import Path
-
+from . import path
 from .. import bl_info
 
 
 LOG_DEBUG = True
 
-debug_info={
+html_logs_filepath = path.join(path.get_addon_dirname(), 'log.html')
+
+_debug_info={
     'bl_version'    : bpy.app.version_string,
     'addon_version' : '.'.join(str(i) for i in bl_info["version"]),
     'blender_bin'   : bpy.app.binary_path,
-    'addon_dir'     : Path.get_addon_dirname(),
-    'w_perm'        : os.access(Path.get_addon_dirname(),os.W_OK),
+    'addon_dir'     : path.get_addon_dirname(),
+    'w_perm'        : os.access(path.get_addon_dirname(),os.W_OK),
     'platform'      : platform.platform(),
     'architecture'  : ' - '.join(str(i) for i in platform.architecture()),
     'processor'     : platform.processor(),
-    'pyversion'     : platform.python_version(),
+    'py_version'     : platform.python_version(),
 }
 
 #---------------------------------------------------------------------------
 #   Console Formatter classe
 #---------------------------------------------------------------------------
 
-class ConsoleStyleFormatter(logging.Formatter):
+class _ConsoleStyleFormatter(logging.Formatter):
     """
     This is a formatter which add escape codes to the record.
     
@@ -87,7 +92,7 @@ class ConsoleStyleFormatter(logging.Formatter):
 #   Html Formatter classe
 #---------------------------------------------------------------------------
 
-class HtmlStyleFormatter(logging.Formatter):
+class _HtmlStyleFormatter(logging.Formatter):
     """
     This is a formatter which add html balises to the record.  
     """
@@ -125,10 +130,7 @@ class HtmlStyleFormatter(logging.Formatter):
 #   Logging initialization
 #---------------------------------------------------------------------------
 
-# Initialize html file
-htmlfile = Path.get_logfile_path()
-
-htmlMetadata = textwrap.dedent('\
+_html_metadata = textwrap.dedent('\
     <!DOCTYPE html>\n\
     <head>\n\
       <title>%(name)s logs</title>\n\
@@ -147,7 +149,7 @@ htmlMetadata = textwrap.dedent('\
     </head>\n\n\
     ') % bl_info
 
-htmlDebugHeader = textwrap.dedent('\
+_html_header = textwrap.dedent('\
     <header>\n\
       Blender version: %(bl_version)s\n\
       Addon version: %(addon_version)s\n\n\
@@ -158,70 +160,70 @@ htmlDebugHeader = textwrap.dedent('\
         %(platform)s\n\
         %(architecture)s\n\
         %(processor)s\n\
-        Python: %(pyversion)s\n\
+        Python: %(py_version)s\n\
     </header>\n\n\
-    ') % debug_info
+    ') % _debug_info
 
-with open(file=htmlfile, mode='w', encoding='utf-8') as f:
-    f.write(htmlMetadata)
-    f.write(htmlDebugHeader)
+with open(file=html_logs_filepath, mode='w', encoding='utf-8') as f:
+    f.write(_html_metadata)
+    f.write(_html_header)
 
 # Format strings
-min_fmt     = '%(levelname)s %(name)s: %(message)s'
-debug_fmt   = '%(asctime)s %(levelname)s %(name)s from %(threadName)s: %(message)s'
+_min_fmt     = '%(levelname)s %(name)s: %(message)s'
+_debug_fmt   = '%(asctime)s %(levelname)s %(name)s from %(threadName)s: %(message)s'
 
 # Define level and format string
-level = logging.WARNING
-fmt = min_fmt
+_level = logging.WARNING
+_fmt = _min_fmt
 
 if LOG_DEBUG:
-    level = logging.DEBUG
-    fmt = debug_fmt
+    _level = logging.DEBUG
+    _fmt = _debug_fmt
 
 # Configure Handlers
-console_handler = logging.StreamHandler()
-console_handler.setLevel(level)
-console_handler.setFormatter(ConsoleStyleFormatter(fmt))
+_console_handler = logging.StreamHandler()
+_console_handler.setLevel(_level)
+_console_handler.setFormatter(_ConsoleStyleFormatter(_fmt))
 
-html_handler = logging.FileHandler(filename=htmlfile, mode='a', encoding='utf-8')
-html_handler.setLevel(level)
-html_handler.setFormatter(HtmlStyleFormatter(fmt=fmt))
+_html_handler = logging.FileHandler(filename=html_logs_filepath, mode='a', encoding='utf-8')
+_html_handler.setLevel(_level)
+_html_handler.setFormatter(_HtmlStyleFormatter(fmt=_fmt))
 
 # Set root logger level
-root_logger = logging.getLogger()
-root_logger.setLevel(level)
+_root_logger = logging.getLogger()
+_root_logger.setLevel(_level)
 
 
 #---------------------------------------------------------------------------
-#   Log functions
+#   Logs functions
 #---------------------------------------------------------------------------
 
 # getLogger re-definition
-def getLogger(name: str | None = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """Return a logger with the specified name, creating it if necessary.
-
-If no name is specified, return the root logger."""
+    
+    If no name is specified, return the root logger."""
     return logging.getLogger(name)
 
 
 # Add handlers to root logger
-def start() -> None:
+def start_logging() -> None:
     """Add console & file handlers to the root logger."""
-    if console_handler not in root_logger.handlers:   
-        root_logger.addHandler(console_handler)
+    if _console_handler not in _root_logger.handlers:   
+        _root_logger.addHandler(_console_handler)
 
-    if html_handler not in root_logger.handlers:
-        root_logger.addHandler(html_handler)
+    if _html_handler not in _root_logger.handlers:
+        _root_logger.addHandler(_html_handler)
     
     if LOG_DEBUG:
-        getLogger(__name__).warning("DEBUG & INFO logging is enabled !")
+        get_logger(__name__).warning("DEBUG & INFO logging is enabled !")
 
    
 # Remove handlers from root logger
-def stop() -> None:
+def stop_logging() -> None:
     """Remove console & file handlers from the root logger."""
-    if console_handler in root_logger.handlers:   
-        root_logger.removeHandler(console_handler)
+    if _console_handler in _root_logger.handlers:   
+        _root_logger.removeHandler(_console_handler)
         
-    if html_handler in root_logger.handlers:
-        root_logger.removeHandler(html_handler)
+    if _html_handler in _root_logger.handlers:
+        _root_logger.removeHandler(_html_handler)
