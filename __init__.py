@@ -1,71 +1,43 @@
-"""Blender addon for Trackmania2020"""
-
 bl_info = {
-    "name": "TM Scenery Addon",
+    "name": "TM Landscape Generator",
     "author": "Skyrow",
-    "version": (0, 0, 0),
+    "version": (0, 1, 0),
     "blender": (3, 6, 0),
-    "location": "View3D",
+    "location": "3D viewport > Sidebar > TM Landscape",
     "description": "",
-    "warning": "",
-    "doc_url": "",
-    "tracker_url": "",
-    "category": "3D View",
+    "category": "Trackmania",
 }
 
+ROOT_PATH = __file__
+LOG_DEBUG = False
 
-import os
 import bpy
 
-ADDON_DIRNAME = os.path.dirname(__file__)
-"""Main __init__.py directory"""
-
+from . import properties
+from . import operators
+from . import panels
 from .utils import events
 from .utils import logs
-
-# operators
-from .operators.OT_HelloWorld       import C_OT_HelloWorld
-from .operators.OT_Test             import C_OT_Test
-# panels
-from .panels.PT_HelloWorld          import C_PT_HelloWorld
-from .panels.PT_Test                import C_PT_Test
-
-
-# classes register list (order matters for panels)
-classes = (
-    # Properties
-
-    # Operators
-    C_OT_HelloWorld,
-    C_OT_Test,
-
-    # Panels
-    C_PT_HelloWorld,
-    C_PT_Test,
-)
-
-
-
-
-# Logger
-log = logs.get_logger(__name__)
 
 
 # register addon
 def register():
     logs.start_logging()
 
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    # Register classes
+    properties.register_classes()
+    operators.register_classes()
+    panels.register_classes()
 
     events.start_listening()
-
 
 # unregister addon
 def unregister():
     events.stop_listening()
 
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    # Unregister classes
+    panels.unregister_classes()
+    operators.unregister_classes()
+    properties.unregister_classes()
 
     logs.stop_logging()

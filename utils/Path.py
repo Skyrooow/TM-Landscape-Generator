@@ -1,46 +1,26 @@
 """Functions relative to handling path variables and retrieving common path for the addon."""
 
 import bpy
-import os
+from pathlib import Path
 
-from .. import ADDON_DIRNAME
-
-
-def native_path(path: str) -> str:
-    """Returns the path with system native separators."""
-    return bpy.path.native_pathsep(path)
+from .. import ROOT_PATH
 
 
-def is_path_existing(pathname: str) -> bool:
-    """Test whether a path exists. Returns False for broken symbolic links."""
-    return os.path.exists(pathname)
+def make_path(*args: str) -> Path:
+    """Returns the given string(s) as Path object"""
+    return Path(*args)
 
 
-def join(path:str, *paths:str) -> str:
-    """Join one or more path segments intelligently."""
-    return os.path.join(path, *paths)
+def get_addon_path() -> Path:
+    """Returns the addon path."""
+    return make_path(ROOT_PATH).parent
 
 
-def dirname(pathname: str) -> str:
-    """Returns the directory component of a pathname."""
-    return os.path.dirname(pathname)
-
-
-def get_addon_dirname() -> str:
-    """Returns the addon directory."""
-    return ADDON_DIRNAME
+def get_blenderfile_path() -> Path:
+    """Returns full path to the current blender file. Empty string if not exists."""
+    return make_path(bpy.data.filepath)
 
 
 def get_assets_dirname() -> str:
     """Returns the addon assets directory."""
-    return join(get_addon_dirname(), 'assets')
-
-
-def get_blenderfile_path() -> str:
-    """Returns full path to the current blender file. Empty string if not exists."""
-    return native_path(bpy.data.filepath)
-
-
-def get_blenderfile_dirname() -> str:
-    """Returns current blender file directory. Empty string if file not exists."""
-    return dirname(get_blenderfile_path())
+    return make_path(get_addon_path(), 'assets')

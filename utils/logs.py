@@ -10,7 +10,7 @@ For each file, create a logger object: `log = logs.get_logger(__name__)`
 
 Logging level | Example | Note
 :---|:---|:---
-DEBUG     | `log.debug("Debug msg", stack_info=True)`
+DEBUG     | `log.debug("Debug msg")`
 INFO      | `log.info("Info msg")`
 WARNING   | `log.warning("Warning msg")`
 EXCEPTION | `log.exception("Exception msg")` | Inside of Except block only              
@@ -19,31 +19,30 @@ CRITICAL  | `log.critical("Critical msg", stack_info=True)`
 """
 
 import logging
-import copy
-import textwrap
 import html
-import os
 import platform
+import textwrap
+import copy
 import bpy
 
 from . import path
-from .. import bl_info
+from .. import (
+    bl_info,
+    LOG_DEBUG,
+)
 
 
-LOG_DEBUG = True
-
-html_logs_filepath = path.join(path.get_addon_dirname(), 'log.html')
+html_logs_filepath = path.get_addon_path() / 'logs.html'
 
 _debug_info={
     'bl_version'    : bpy.app.version_string,
     'addon_version' : '.'.join(str(i) for i in bl_info["version"]),
     'blender_bin'   : bpy.app.binary_path,
-    'addon_dir'     : path.get_addon_dirname(),
-    'w_perm'        : os.access(path.get_addon_dirname(),os.W_OK),
+    'addon_path'     : path.get_addon_path(),
     'platform'      : platform.platform(),
     'architecture'  : ' - '.join(str(i) for i in platform.architecture()),
     'processor'     : platform.processor(),
-    'py_version'     : platform.python_version(),
+    'py_version'    : platform.python_version(),
 }
 
 #---------------------------------------------------------------------------
@@ -51,19 +50,13 @@ _debug_info={
 #---------------------------------------------------------------------------
 
 class _ConsoleStyleFormatter(logging.Formatter):
-    """
-    This is a formatter which add escape codes to the record.
-    
-    https://gist.github.com/abritinthebay/d80eb99b2726c83feb0d97eab95206c4
-    """
-    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
-
+    """This is a formatter which add escape codes to the record."""
     level_to_color = {
-        logging.DEBUG       :   BLUE,
-        logging.INFO        :   GREEN,
-        logging.WARNING     :   YELLOW,
-        logging.ERROR       :   RED,
-        logging.CRITICAL    :   MAGENTA   
+        logging.DEBUG       :   '1;34', # bright blue
+        logging.INFO        :   '1;32', # bright green
+        logging.WARNING     :   '1;33', # bright yellow
+        logging.ERROR       :   '1;31', # bright red
+        logging.CRITICAL    :   '1;35', # bright magenta   
     }
 
     def format(self, record) -> str:
@@ -72,20 +65,20 @@ class _ConsoleStyleFormatter(logging.Formatter):
 
         levelcolor = self.level_to_color[cpyRecord.levelno]
         
-        cpyRecord.levelname     = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
-        cpyRecord.name          = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.name)
-        cpyRecord.threadName    = '\x1b[1;3%sm%s\x1b[0m'    % (levelcolor, cpyRecord.threadName)
-        cpyRecord.msg           = '\x1b[2m%s\x1b[0m'        % (cpyRecord.msg)
+        cpyRecord.levelname     = f'\x1b[{levelcolor}m{cpyRecord.levelname:^9}\x1b[0m'
+        cpyRecord.name          = f'\x1b[{levelcolor}m{cpyRecord.name}\x1b[0m'
+        cpyRecord.threadName    = f'\x1b[{levelcolor}m{cpyRecord.threadName}\x1b[0m'
+        cpyRecord.msg           = f'\x1b[2m{cpyRecord.msg}\x1b[0m' # faint
         return super().format(cpyRecord)
 
     def formatTime(self, record, datefmt=None) -> str:
-        return '\x1b[2m%s\x1b[0m' % super().formatTime(record, datefmt)
+        return f'\x1b[2m{super().formatTime(record, datefmt)}\x1b[0m' # faint
     
     def formatException(self, ei) -> str:
-        return '\x1b[36m%s\x1b[0m' % super().formatException(ei)
+        return f'\x1b[36m{super().formatException(ei)}\x1b[0m' # cyan
     
     def formatStack(self, stack_info) -> str:
-        return '\x1b[36m%s\x1b[0m' % super().formatStack(stack_info)
+        return f'\x1b[36m{super().formatStack(stack_info)}\x1b[0m' # cyan
 
 
 #---------------------------------------------------------------------------
@@ -93,9 +86,7 @@ class _ConsoleStyleFormatter(logging.Formatter):
 #---------------------------------------------------------------------------
 
 class _HtmlStyleFormatter(logging.Formatter):
-    """
-    This is a formatter which add html balises to the record.  
-    """
+    """This is a formatter which add html balises to the record."""
     level_to_color = {
         logging.DEBUG       :   'l1',
         logging.INFO        :   'l2',
@@ -110,20 +101,30 @@ class _HtmlStyleFormatter(logging.Formatter):
 
         levelcolor = self.level_to_color[cpyRecord.levelno]
         
-        cpyRecord.levelname     = '<span class="%s">%s</span>'  % (levelcolor, '{:^9s}'.format(cpyRecord.levelname))
-        cpyRecord.name          = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.name)
-        cpyRecord.threadName    = '<span class="%s">%s</span>'  % (levelcolor, cpyRecord.threadName)
-        cpyRecord.msg           = '<span class="msg">%s</span>' % html.escape(cpyRecord.msg)
+        cpyRecord.levelname     = f'<span class="{levelcolor}">{cpyRecord.levelname:^9}</span>'
+        cpyRecord.name          = f'<span class="{levelcolor}">{cpyRecord.name}</span>'
+        cpyRecord.threadName    = f'<span class="{levelcolor}">{cpyRecord.threadName}</span>'
+        cpyRecord.msg           = f'<span class="msg">{html.escape(cpyRecord.msg)}</span>'
         return super().format(cpyRecord)
 
     def formatTime(self, record, datefmt=None) -> str:
-        return '<span class="t">%s</span>' % super().formatTime(record, datefmt)
+        return f'<span class="t">{super().formatTime(record, datefmt)}</span>'
     
     def formatException(self, exc_info) -> str:
-        return '<span class="ei">%s</span>' % html.escape(super().formatException(exc_info))
+        return f'<span class="ei">{html.escape(super().formatException(exc_info))}</span>' 
     
     def formatStack(self, stack_info) -> str:
-        return '<span class="si">%s</span>' % html.escape(super().formatStack(stack_info))
+        return f'<span class="si">{html.escape(super().formatStack(stack_info))}</span>'
+    
+
+#---------------------------------------------------------------------------
+#   Filter class
+#---------------------------------------------------------------------------
+
+class _LogsPackageFilter(logging.Filter):
+
+    def filter(record):
+        return record.name.startswith(__package__)
     
 
 #---------------------------------------------------------------------------
@@ -135,16 +136,16 @@ _html_metadata = textwrap.dedent('\
     <head>\n\
       <title>%(name)s logs</title>\n\
       <style>\n\
-      body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large;}\n\
+      body   {color: white; background-color: black; white-space: pre; font-family: monospace; font-size: large}\n\
       .l1    {color: dodgerblue}\n\
       .l2    {color: lawngreen}\n\
       .l3    {color: yellow}\n\
       .l4    {color: crimson}\n\
       .l5    {color: magenta}\n\
       .msg   {color: grey}\n\
-      .ei    {color: steelblue;}\n\
-      .si    {color: steelblue;}\n\
-      .t     {color: grey;}\n\
+      .ei    {color: steelblue}\n\
+      .si    {color: steelblue}\n\
+      .t     {color: grey}\n\
       </style>\n\
     </head>\n\n\
     ') % bl_info
@@ -154,8 +155,7 @@ _html_header = textwrap.dedent('\
       Blender version: %(bl_version)s\n\
       Addon version: %(addon_version)s\n\n\
       Blender executable: "%(blender_bin)s"\n\
-      Addon directory: "%(addon_dir)s"\n\
-        Write permission: %(w_perm)s\n\n\
+      Addon directory: "%(addon_path)s"\n\n\
       Platform informations:\n\
         %(platform)s\n\
         %(architecture)s\n\
@@ -184,10 +184,12 @@ if LOG_DEBUG:
 _console_handler = logging.StreamHandler()
 _console_handler.setLevel(_level)
 _console_handler.setFormatter(_ConsoleStyleFormatter(_fmt))
+_console_handler.addFilter(_LogsPackageFilter)
 
 _html_handler = logging.FileHandler(filename=html_logs_filepath, mode='a', encoding='utf-8')
 _html_handler.setLevel(_level)
 _html_handler.setFormatter(_HtmlStyleFormatter(fmt=_fmt))
+_html_handler.addFilter(_LogsPackageFilter)
 
 # Set root logger level
 _root_logger = logging.getLogger()
